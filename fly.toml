@@ -16,8 +16,6 @@ primary_region = 'sjc'
   min_machines_running = 0
   processes = ['app']
 
-[build]
-  dockerfile = "./dockerfile"
 
 [[vm]]
   size = 'shared-cpu-1x'
