@@ -1,0 +1,23 @@
+# fly.toml app configuration file generated for googleid on 2024-07-19T23:10:58-07:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'googleid'
+app_name = 'googleid'
+
+primary_region = 'sjc'
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+[build]
+  dockerfile = "./dockerfile"
+
+[[vm]]
+  size = 'shared-cpu-1x'
