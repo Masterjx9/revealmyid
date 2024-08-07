@@ -42,6 +42,7 @@ def index():
         return render_template("index.html")
 
 
+
 @app.route("/login")
 def login():
     authorization_url, state = flow.authorization_url(prompt="consent", access_type="offline")
