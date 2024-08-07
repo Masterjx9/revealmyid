@@ -10,8 +10,8 @@ COPY requirements.txt .
 # Install the Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the app.py file to the working directory
-COPY app.py .
+# Copy the current directory contents into the container at /app
+COPY . .
 
 # Expose port 5000 for the Flask app
 EXPOSE 5000
