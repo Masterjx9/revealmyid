@@ -389,6 +389,7 @@ def github_callback():
     github_client_secret = os.getenv("GITHUB_CLIENT_SECRET")
     github_redirect_uri = url_for("github_callback", _external=True)
     
+    #ci/cd change
     token_data = {
         "code": code,
         "redirect_uri": github_redirect_uri,
