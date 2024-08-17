@@ -1,5 +1,6 @@
 from flask import Flask, redirect, url_for, session, request, render_template_string, render_template, url_for
 from flask_session import Session
+from werkzeug.middleware.proxy_fix import ProxyFix
 from google_auth_oauthlib.flow import Flow
 from google.oauth2.id_token import verify_oauth2_token
 from google.auth.transport import requests as google_requests
@@ -15,6 +16,7 @@ os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 PORT = 8080
 load_dotenv()
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  
 app.config.from_object(microsoft_config)
 Session(app)
 
