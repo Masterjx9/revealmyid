@@ -8,6 +8,7 @@ import requests
 from requests_oauthlib import OAuth2Session
 from dotenv import load_dotenv
 import os
+import dropbox
 import identity.web
 
 import microsoft_config
@@ -58,6 +59,9 @@ auth = identity.web.Auth(
     client_credential=app.config["CLIENT_SECRET"],
 )
 
+DROPBOX_APP_KEY = os.getenv("DROPBOX_APP_KEY")
+DROPBOX_APP_SECRET = os.getenv("DROPBOX_APP_SECRET")
+
 @app.route("/")
 def index():
     google_id = session.get("google_id", None)
@@ -68,6 +72,7 @@ def index():
     github_id = session.get("github_id", None)
     gitlab_id = session.get("gitlab_id", None)
     bitbucket_id = session.get("bitbucket_id", None)
+    dropbox_id = session.get("dropbox_id", None)
     
     if google_id:
         return render_template_string("""
@@ -124,7 +129,14 @@ def index():
             <p>Your Bitbucket ID is: {{ bitbucket_id }}</p>
             <a href="/logout">Logout</a>
         """, bitbucket_id=bitbucket_id)
-        
+    
+    if dropbox_id:
+        return render_template_string("""
+            <h1>Welcome, Dropbox User!</h1>
+            <p>Your Dropbox ID is: {{ dropbox_id }}</p>
+            <a href="/logout">Logout</a>
+        """, dropbox_id=dropbox_id)
+
     return render_template("index.html")
 
 @app.route("/login")
@@ -211,6 +223,18 @@ def login():
         authorization_url, state = linkedin.authorization_url(linkedin_authorization_base_url)
         session["state"] = state
         return redirect(authorization_url)
+    
+    if platform == "dropbox":
+        dropbox_redirect_uri = url_for("dropbox_callback", _external=True)
+
+        dropbox_authorization_url = (
+            "https://www.dropbox.com/oauth2/authorize?"
+            f"client_id={DROPBOX_APP_KEY}&"
+            f"response_type=code&"
+            f"redirect_uri={dropbox_redirect_uri}&"
+            f"state={os.urandom(16).hex()}"
+        )
+        return redirect(dropbox_authorization_url)
 
 
     return "Invalid platform", 400
@@ -532,6 +556,45 @@ def bitbucket_callback():
     
     return redirect(url_for("index"))
 
+@app.route("/dropbox/callback")
+def dropbox_callback():
+    code = request.args.get('code')
+    dropbox_redirect_uri = url_for("dropbox_callback", _external=True)
+    
+    token_data = {
+        "code": code,
+        "grant_type": "authorization_code",
+        "client_id": DROPBOX_APP_KEY,
+        "client_secret": DROPBOX_APP_SECRET,
+        "redirect_uri": dropbox_redirect_uri
+    }
+    
+    token_response = requests.post(
+        "https://api.dropboxapi.com/oauth2/token",
+        data=token_data,
+        headers={"Content-Type": "application/x-www-form-urlencoded"}
+    )
+    
+    if token_response.status_code != 200:
+        return f"Error fetching token: {token_response.text}"
+
+    token = token_response.json().get("access_token")
+    
+    if not token:
+        return "Failed to obtain access token."
+
+    # Use the access token to get user information
+    headers = {'Authorization': f"Bearer {token}"}
+    user_info_response = requests.post("https://api.dropboxapi.com/2/users/get_current_account", headers=headers)
+    
+    if user_info_response.status_code != 200:
+        return f"Error fetching Dropbox user info: {user_info_response.text}"
+
+    user_info = user_info_response.json()
+    session["dropbox_id"] = user_info.get("account_id")
+    
+    return redirect(url_for("index"))
+
 @app.route("/logout")
 def logout():
     session.pop("google_id", None)
@@ -542,6 +605,7 @@ def logout():
     session.pop("github_id", None)
     session.pop("gitlab_id", None)
     session.pop("bitbucket_id", None)
+    session.pop("dropbox_id", None)
     session.clear()
     return redirect(url_for("index"))
 
