@@ -670,6 +670,7 @@ def logout():
     session.pop("gitlab_id", None)
     session.pop("bitbucket_id", None)
     session.pop("dropbox_id", None)
+    
     session.clear()
     return redirect(url_for("index"))
 
