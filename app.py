@@ -622,10 +622,23 @@ def slack_callback():
     code = request.args.get('code')
     state = request.args.get('state')
     
+    print("test")
+    print("test")
+    print("test")
+    print("test")
+    print("test")
+    print("test")
+    print("test")
     slack_client_id = os.getenv("SLACK_APP_ID")
     slack_client_secret = os.getenv("SLACK_APP_SECRET")
     slack_redirect_uri = url_for("slack_callback", _external=True)
     
+    print("test1")
+    print("test1")
+    print("test1")
+    print("test1")
+    print("test1")
+    print("test1")
     token_data = {
         "client_id": slack_client_id,
         "client_secret": slack_client_secret,
@@ -633,15 +646,39 @@ def slack_callback():
         "redirect_uri": slack_redirect_uri
     }
     
+    print("test2")
+    print("test2")
+    print("test2")
+    print("test2")
+    print("test2")
+    print("test2")
+    print("test2")
+    print("test2")
     token_response = requests.post(
         "https://slack.com/api/oauth.v2.access",
         data=token_data,
         headers={"Content-Type": "application/x-www-form-urlencoded"}
     )
-    
+    print("test3")
+    print("test3")
+    print("test3")
+    print("test3")
+    print("test3")
+    print("test3")
     if token_response.status_code != 200:
         return f"Error fetching token: {token_response.text}"
     
+    print(f"Token response: {token_response.text}")
+    print(f"Token response: {token_response.text}")
+    print(f"Token response: {token_response.text}")
+    print(f"Token response: {token_response.text}")
+    print(f"Token response: {token_response.text}")
+    print(f"Token response: {token_response.text}")
+    print(f"Token response: {token_response.text}")
+    print(f"Token response: {token_response.text}")
+    print(f"Token response: {token_response.text}")
+    print(f"Token response: {token_response.text}")
+    print(f"Token response: {token_response.text}")
     print(f"Token response: {token_response.text}")
     print(f"Token response: {token_response.text}")
     print(f"Token response: {token_response.text}")
