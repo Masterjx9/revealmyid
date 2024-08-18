@@ -248,9 +248,9 @@ def login():
         slack_redirect_uri = url_for("slack_callback", _external=True)
         
         slack_authorization_url = (
-            "https://slack.com/oauth/v2/authorize?"
+            "https://slack.com/openid/connect/authorize?"
             f"client_id={os.getenv('SLACK_APP_ID')}&"
-            f"scope=identity.basic&"
+            f"scope=openid%20email%20profile&"
             f"redirect_uri={slack_redirect_uri}&"
             f"state={os.urandom(16).hex()}"
         )
@@ -670,7 +670,7 @@ def logout():
     session.pop("gitlab_id", None)
     session.pop("bitbucket_id", None)
     session.pop("dropbox_id", None)
-    
+
     session.clear()
     return redirect(url_for("index"))
 
