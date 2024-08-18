@@ -642,7 +642,7 @@ def slack_callback():
     if token_response.status_code != 200:
         return f"Error fetching token: {token_response.text}"
     
-    access_token = token_json["authed_user"]["access_token"]
+    token = token_response.json()["authed_user"]["access_token"]
     
     if not token:
         return f"Failed to obtain access token. {token_response.text}"
