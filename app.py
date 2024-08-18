@@ -73,6 +73,7 @@ def index():
     gitlab_id = session.get("gitlab_id", None)
     bitbucket_id = session.get("bitbucket_id", None)
     dropbox_id = session.get("dropbox_id", None)
+    slack_id = session.get("slack_id", None)
     
     if google_id:
         return render_template_string("""
@@ -136,6 +137,13 @@ def index():
             <p>Your Dropbox ID is: {{ dropbox_id }}</p>
             <a href="/logout">Logout</a>
         """, dropbox_id=dropbox_id)
+    
+    if slack_id:
+        return render_template_string("""
+            <h1>Welcome, Slack User!</h1>
+            <p>Your Slack ID is: {{ slack_id }}</p>
+            <a href="/logout">Logout</a>
+        """, slack_id=slack_id)
 
     return render_template("index.html")
 
@@ -235,6 +243,18 @@ def login():
             f"state={os.urandom(16).hex()}"
         )
         return redirect(dropbox_authorization_url)
+    
+    if platform == "slack":
+        slack_redirect_uri = url_for("slack_callback", _external=True)
+        
+        slack_authorization_url = (
+            "https://slack.com/oauth/v2/authorize?"
+            f"client_id={os.getenv('SLACK_APP_ID')}&"
+            f"scope=identity.basic&"
+            f"redirect_uri={slack_redirect_uri}&"
+            f"state={os.urandom(16).hex()}"
+        )
+        return redirect(slack_authorization_url)
 
 
     return "Invalid platform", 400
@@ -594,6 +614,50 @@ def dropbox_callback():
     session["dropbox_id"] = user_info.get("account_id")
     
     return redirect(url_for("index"))
+
+
+@app.route("/slack/callback")
+def slack_callback():
+    code = request.args.get('code')
+    state = request.args.get('state')
+    
+    slack_client_id = os.getenv("SLACK_APP_ID")
+    slack_client_secret = os.getenv("SLACK_APP_SECRET")
+    slack_redirect_uri = url_for("slack_callback", _external=True)
+    
+    token_data = {
+        "client_id": slack_client_id,
+        "client_secret": slack_client_secret,
+        "code": code,
+        "redirect_uri": slack_redirect_uri
+    }
+    
+    token_response = requests.post(
+        "https://slack.com/api/oauth.v2.access",
+        data=token_data,
+        headers={"Content-Type": "application/x-www-form-urlencoded"}
+    )
+    
+    if token_response.status_code != 200:
+        return f"Error fetching token: {token_response.text}"
+    
+    token = token_response.json().get("access_token")
+    
+    if not token:
+        return "Failed to obtain access token."
+    
+    # Use the access token to fetch user information
+    headers = {'Authorization': f"Bearer {token}"}
+    user_info_response = requests.get("https://slack.com/api/users.identity", headers=headers)
+    
+    if user_info_response.status_code != 200:
+        return f"Error fetching Slack user info: {user_info_response.text}"
+    
+    user_info = user_info_response.json()
+    session["slack_id"] = user_info.get("user", {}).get("id")
+    
+    return redirect(url_for("index"))
+
 
 @app.route("/logout")
 def logout():
