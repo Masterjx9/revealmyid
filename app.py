@@ -251,7 +251,7 @@ def login():
             "https://slack.com/openid/connect/authorize?"
             f"response_type=code&"
             f"client_id={os.getenv('SLACK_APP_ID')}&"
-            f"scope=identity.basic&"
+            f"scope=openid%20email%20profile&"
             f"redirect_uri={slack_redirect_uri}&"
             f"state={os.urandom(16).hex()}"
         )
