@@ -655,7 +655,7 @@ def slack_callback():
         return f"Error fetching Slack user info: {user_info_response.text}"
     
     user_info = user_info_response.json()
-    session["slack_id"] = user_info.get("user", {}).get("id")
+    session["slack_id"] = user_info
     
     return redirect(url_for("index"))
 
